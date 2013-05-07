@@ -3,8 +3,7 @@ terrainGen
 
 A python experiment in procedural terrain generation.
 
-How To Run
-==========
+## How To Run
 
 Running terrain.py will generate a heightmap and render it using python's TKinter. 
 
