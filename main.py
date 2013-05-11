@@ -1,5 +1,5 @@
 import sys
-import Tkinter
+import tkinter
 import math
 import random
 
@@ -10,7 +10,7 @@ import draw
 
 ### Generation Parameters ###
 windowDim = 700
-n = 7
+n = 8
 
 minHeight = 0
 maxHeight = 1
@@ -64,6 +64,6 @@ if smoothTerrain:
 #landscape.printGridTransposed()
 
 # Draw
-t = Tkinter.Tk()
+t = tkinter.Tk()
 a = draw.Map(t, landscape.grid, windowDim, blockDim)
 t.mainloop()

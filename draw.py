@@ -1,10 +1,10 @@
-import Tkinter
+import tkinter
 
 class Map:
         def __init__(self, t, terrainGrid, windowDim, blockDim=1):
                 gridDim = len(terrainGrid)
             
-                self.i = Tkinter.PhotoImage(width=windowDim, height=windowDim)
+                self.i = tkinter.PhotoImage(width=windowDim, height=windowDim)
             
                 useColors = True
                 colors = []
@@ -20,7 +20,7 @@ class Map:
                                         color = [intensity for i in range(3)]
                                 colors.append(color)
 
-                c = Tkinter.Canvas(t, width=windowDim, height=windowDim); c.pack()
+                c = tkinter.Canvas(t, width=windowDim, height=windowDim); c.pack()
 
                 macroRow = 0; macroCol = 0              
                 if len(terrainGrid) == windowDim:
@@ -60,7 +60,7 @@ class Map:
                                 # After last column of colours in row, move to start of next row
                                 if macroCol == gridDim:
                                         macroRow +=1; macroCol = 0
-                c.create_image(0, 0, image = self.i, anchor=Tkinter.NW)
+                c.create_image(0, 0, image = self.i, anchor=tkinter.NW)
 
         def getTerrainColor(self, height):
                 # Height proportions at which different terrain colors end
