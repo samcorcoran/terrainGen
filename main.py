@@ -1,5 +1,5 @@
 import sys
-import tkinter
+import Tkinter as tk
 import math
 import random
 
@@ -10,7 +10,7 @@ import draw
 
 ### Generation Parameters ###
 windowDim = 700
-n = 3
+n = 7
 
 minHeight = 0
 maxHeight = 1
@@ -63,47 +63,15 @@ if smoothTerrain:
 
 #landscape.printGridTransposed()
 
-
 # Draw
-t = tkinter.Tk()
-# Track key presses
-right = False
-left = False
-up = False
-down = False
-def keyPressed(event):
-        if event.keysym == 'left':
-                left = True
-        elif event.keysym == 'right':
-                right = True
-        elif event.keysym == 'up':
-                up = True
-        elif event.keysym == 'down':
-                down = True
-        else:
-                return 0
-t.bind_all('<Key>', keyPressed)
-
-def resetKeys():
-        up = True
-        down = True
-        left = True
-        right = True
-
-aMap = draw.Map(t, windowDim)
-
-xOffset = 0
-yOffset = 0
+t = tk.Tk()
+aMap = draw.Map(t, landscape.grid, windowDim, blockDim)
+t.bind_all('<Key>', aMap.keyPressed)
 while True:
-        if left: xOffset += -1
-        elif right: offset += 1
-        if up: yOffset += -1
-        elif down: yOffset += 1
-        xOffset = xOffset % windowDim
-        yOffset = yOffset % windowDim
-
-        if mapChanged:
-                aMap.updateMap(t, landscape.grid, windowDim, blockDim, xOffset, yOffset)
-                mapChanged = False
+        aMap.applyKeyPressOffsets()
+        if aMap.mapChanged:
+                aMap.updateMap(t)
+                aMap.mapChanged = False
+                
         aMap.updateCanvas()
 t.mainloop()
