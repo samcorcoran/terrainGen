@@ -1,11 +1,17 @@
 import tkinter
 
 class Map:
-        def __init__(self, t, terrainGrid, windowDim, blockDim=1):
-                gridDim = len(terrainGrid)
-            
+        def __init__(self, t, windowDim):
                 self.i = tkinter.PhotoImage(width=windowDim, height=windowDim)
-            
+                self.c = tkinter.Canvas(t, width=windowDim, height=windowDim)
+                self.c.pack()
+
+        def updateCanvas(self):
+                self.c.create_image(0, 0, image = self.i, anchor=tkinter.NW)
+                self.c.update()
+                
+        def updateMap(self, t, terrainGrid, windowDim, blockDim, xOffset, yOffset):
+                gridDim = len(terrainGrid)
                 useColors = True
                 colors = []
                 # Iterate over columns
@@ -19,8 +25,6 @@ class Map:
                                         intensity = int(((height-minHeight)/maxHeight) * 255)
                                         color = [intensity for i in range(3)]
                                 colors.append(color)
-
-                c = tkinter.Canvas(t, width=windowDim, height=windowDim); c.pack()
 
                 macroRow = 0; macroCol = 0              
                 if len(terrainGrid) == windowDim:
@@ -51,7 +55,7 @@ class Map:
                                 # Draw Rect
                                 strCol = '#%02x%02x%02x' % tuple(color)
                                 # NOTE: Canvas coordinates start from bottom-left, so rectangles transpose terrain
-                                c.create_rectangle(x0, y0, x1, y1, outline = strCol, fill = strCol)
+                                self.c.create_rectangle(x0, y0, x1, y1, outline = strCol, fill = strCol)
 
                                 #c.create_rectangle(x0, y0, x1, y1,  fill = strCol)
 
@@ -60,7 +64,7 @@ class Map:
                                 # After last column of colours in row, move to start of next row
                                 if macroCol == gridDim:
                                         macroRow +=1; macroCol = 0
-                c.create_image(0, 0, image = self.i, anchor=tkinter.NW)
+                
 
         def getTerrainColor(self, height):
                 # Height proportions at which different terrain colors end
