@@ -10,7 +10,7 @@ import draw
 
 ### Generation Parameters ###
 windowDim = 700
-n = 3
+n = 4
 
 minHeight = 0
 maxHeight = 1

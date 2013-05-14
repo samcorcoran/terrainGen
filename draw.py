@@ -24,7 +24,7 @@ class Map:
                 self.yOffset = 0
                 self.totalYOffset = 0
                 # Navigation step size: 10% of grid width
-                self.navStep = 1#int(0.1 * len(self.terrainGrid))
+                self.navStep = int(0.1 * len(self.terrainGrid))
                 print("init navStep: " + str(self.navStep))
 
                 # Calculate grid of colors
@@ -71,12 +71,8 @@ class Map:
                         count += 1
 
         def updateRects(self):
-                first = None
-                second = None
                 # Move every rectangle according to
                 for rect in self.rectangles:
-                        if i == 0: first = rect
-                        if i == 1: second = rect
                         # Rect loc necessary to check for whether it is out of bounds
                         coords = self.c.coords(rect)
 
@@ -98,8 +94,8 @@ class Map:
                                 yShift -= self.windowDim
                         
                         self.c.move(rect, xShift, yShift)
-                        self.yOffset = 0
-                        self.xOffset = 0
+                self.yOffset = 0
+                self.xOffset = 0
 
         def updateMap(self, t):
                 gridDim = len(self.terrainGrid)
