@@ -10,7 +10,7 @@ import draw
 
 ### Generation Parameters ###
 windowDim = 700
-n = 7
+n = 3
 
 minHeight = 0
 maxHeight = 1
@@ -67,11 +67,12 @@ if smoothTerrain:
 t = tk.Tk()
 aMap = draw.Map(t, landscape.grid, windowDim, blockDim)
 t.bind_all('<Key>', aMap.keyPressed)
+aMap.drawRects()
 while True:
         aMap.applyKeyPressOffsets()
+        aMap.updateRects()
         if aMap.mapChanged:
-                aMap.updateMap(t)
+                #aMap.updateMap(t)
                 aMap.mapChanged = False
-                
         aMap.updateCanvas()
 t.mainloop()
