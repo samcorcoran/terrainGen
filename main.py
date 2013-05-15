@@ -9,8 +9,8 @@ import draw
 #print("Terrain!")
 
 ### Generation Parameters ###
-windowDim = 700
-n = 4
+windowDim = 800
+n = 7
 
 minHeight = 0
 maxHeight = 1
@@ -42,19 +42,19 @@ else:
 print("Window dimension set to: " + str(windowDim) + ", block width is: " + str(blockDim) + ", gridDim: " + str(gridDim))
 
 # Create Terrain object
-landscape = terrain.Terrain(gridDim, gridDim)
+landscape = terrain.Terrain(gridDim, gridDim, minHeight, maxHeight)
 
 # Generate terrain
 if useDiamondSquare:
         print("Generating 'Diamond Square' terrain with " + str(subdivisions) + " subdivisions.")
-        landscape.seededDiamondSquare(0, 0, gridDim-1, gridDim-1, minHeight, maxHeight, roughness, subdivisions, toroidal, fillSubGrids)
+        landscape.seededDiamondSquare(0, 0, gridDim-1, gridDim-1, roughness, subdivisions, toroidal, fillSubGrids)
 elif useMidpointDisplacement:
         print("Generating 'Midpoint Displacement' terrain with " + str(subdivisions) + " subdivisions.")
-        landscape.seededMidpointDisplacement(0, 0, gridDim-1, gridDim-1, minHeight, maxHeight, roughness, subdivisions, toroidal, fillSubGrids)
+        landscape.seededMidpointDisplacement(0, 0, gridDim-1, gridDim-1, roughness, subdivisions, toroidal, fillSubGrids)
 else:
         print("Generating random height field.")
-        #landscape.randomiseCorners(minHeight, maxHeight)
-        landscape.randomiseHeights(minHeight, maxHeight)
+        #landscape.randomiseCorners()
+        landscape.randomiseHeights()
 
 # Smooth terrain
 if smoothTerrain:
@@ -65,14 +65,13 @@ if smoothTerrain:
 
 # Draw
 t = tk.Tk()
-aMap = draw.Map(t, landscape.grid, windowDim, blockDim)
+aMap = draw.Map(t, landscape, windowDim, blockDim)
 t.bind_all('<Key>', aMap.keyPressed)
-aMap.drawRects()
+aMap.createRects()
 while True:
         aMap.applyKeyPressOffsets()
-        aMap.updateRects()
         if aMap.mapChanged:
-                #aMap.updateMap(t)
+                aMap.updateRects()
                 aMap.mapChanged = False
         aMap.updateCanvas()
 t.mainloop()

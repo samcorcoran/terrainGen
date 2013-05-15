@@ -2,21 +2,22 @@ import math
 import random
 
 class Terrain():
-        def __init__(self, xDim, yDim):
+        def __init__(self, xDim, yDim, minHeight = 0, maxHeight = 1):
                 self.xDim = xDim
                 self.yDim = yDim
                 # Grid outer-list is of columns, inner list are of rows
                 self.grid = [[1 for x in range(self.xDim)] for y in range(self.yDim)]
+                self.minHeight = minHeight
+                self.maxHeight = maxHeight
 
-        def randomiseHeights(self, minHeight = 0, maxHeight = 1):
-                self.grid = [[random.uniform(minHeight, maxHeight) for x in range(self.xDim)] for y in range(self.yDim)]
+        def randomiseHeights(self):
+                self.grid = [[random.uniform(self.minHeight, self.maxHeight) for x in range(self.xDim)] for y in range(self.yDim)]
 
-        def randomiseCorners(self, minHeight = 0, maxHeight = 1):
-                
-                self.grid[0][0] = random.uniform(minHeight, maxHeight)
-                self.grid[len(self.grid)-1][0] = random.uniform(minHeight, maxHeight)
-                self.grid[0][-1] = random.uniform(minHeight, maxHeight)
-                self.grid[-1][-1] = random.uniform(minHeight, maxHeight)
+        def randomiseCorners(self):
+                self.grid[0][0] = random.uniform(self.minHeight, self.maxHeight)
+                self.grid[len(self.grid)-1][0] = random.uniform(self.minHeight, self.maxHeight)
+                self.grid[0][-1] = random.uniform(self.minHeight, self.maxHeight)
+                self.grid[-1][-1] = random.uniform(self.minHeight, self.maxHeight)
 
         def smoothHeights(self, nhoodWidth = 3, iterations = 1):
                 for i in range(iterations):
@@ -65,8 +66,8 @@ class Terrain():
                                                         
                 return 0 if counter == 0 else total/counter
                 
-        def diamondSquare(self, x0 = 0, y0 = 0, x1 = 1, y1 = 1, roughness = 5, minHeight = 0, maxHeight = 1):
-                heightRange = maxHeight - minHeight
+        def diamondSquare(self, x0 = 0, y0 = 0, x1 = 1, y1 = 1, roughness = 5):
+                heightRange = self.maxHeight - self.minHeight
                 # Continue if enclosed grid is not 2x2
                 if x1 - x0 > 1:                 
                         # Diamond Step
@@ -85,31 +86,31 @@ class Terrain():
                         cornerAvg = (a + b + c + d) / 4
                         maxDisplacement = int(math.pow(2, roughness) / 255)
                         maxDisplacement = 0.08 * heightRange
-                        e = min(max(cornerAvg + random.uniform(-maxDisplacement, maxDisplacement), minHeight), maxHeight)
+                        e = min(max(cornerAvg + random.uniform(-maxDisplacement, maxDisplacement), self.minHeight), self.maxHeight)
                         self.grid[midX][midY] = e
                         
                         # Square step
                         # Left
-                        self.grid[x0][midY] = min(max(((a + c + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), minHeight), maxHeight)
+                        self.grid[x0][midY] = min(max(((a + c + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), self.minHeight), self.maxHeight)
                         # Above
-                        self.grid[midX][y0] = min(max(((a + b + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), minHeight), maxHeight)
+                        self.grid[midX][y0] = min(max(((a + b + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), self.minHeight), self.maxHeight)
                         # Right
-                        self.grid[x1][midY] = min(max(((b + d + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), minHeight), maxHeight)
+                        self.grid[x1][midY] = min(max(((b + d + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), self.minHeight), self.maxHeight)
                         # Below
-                        self.grid[midX][y1] = min(max(((c + d + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), minHeight), maxHeight)
+                        self.grid[midX][y1] = min(max(((c + d + e) / 3) + random.uniform(-maxDisplacement, maxDisplacement), self.minHeight), self.maxHeight)
 
                         # Begin recursion..
                         # Upper left
-                        self.diamondSquare(x0, y0, midX, midY, roughness, minHeight, maxHeight)
+                        self.diamondSquare(x0, y0, midX, midY, roughness)
                         # Upper Right
-                        self.diamondSquare(midX, y0, x1, midY, roughness, minHeight, maxHeight)
+                        self.diamondSquare(midX, y0, x1, midY, roughness)
                         # Lower Left
-                        self.diamondSquare(x0, midY, midX, y1, roughness, minHeight, maxHeight)
+                        self.diamondSquare(x0, midY, midX, y1, roughness)
                         # Lower Right
-                        self.diamondSquare(midX, midY, x1, y1, roughness, minHeight, maxHeight)
+                        self.diamondSquare(midX, midY, x1, y1, roughness)
 
-        def midpointDisplacement(self, x0, y0, x1, y1, roughness = 5, minHeight = 0, maxHeight = 1):
-                heightRange = maxHeight - minHeight
+        def midpointDisplacement(self, x0, y0, x1, y1, roughness = 5):
+                heightRange = self.maxHeight - self.minHeight
                 #print("Starting with coords:" + str([x0, y0, x1, y1]))
                 maxIndex = len(self.grid)-1
                 if x1 - x0 > 1:
@@ -132,19 +133,19 @@ class Terrain():
                         # Calculate centre-point height
                         maxDisplacement = (math.pow(2, roughness) / 255) * heightRange
                         #maxDisplacement = 0.1
-                        e = min(max(((a + b + c + d) / 4) + random.uniform(-maxDisplacement, maxDisplacement), minHeight), maxHeight)
+                        e = min(max(((a + b + c + d) / 4) + random.uniform(-maxDisplacement, maxDisplacement), self.minHeight), self.maxHeight)
                         self.grid[halfwayX][halfwayY] = e                     
                         # Perform recursion
                         # Upper-left
-                        self.midpointDisplacement(x0, y0, halfwayX, halfwayY, roughness, minHeight, maxHeight) 
+                        self.midpointDisplacement(x0, y0, halfwayX, halfwayY, roughness) 
                         # Upper-right
-                        self.midpointDisplacement(halfwayX, y0, x1, halfwayY, roughness, minHeight, maxHeight)                              
+                        self.midpointDisplacement(halfwayX, y0, x1, halfwayY, roughness)                              
                         # Lower-left
-                        self.midpointDisplacement(x0, halfwayY, halfwayX, y1, roughness, minHeight, maxHeight)                              
+                        self.midpointDisplacement(x0, halfwayY, halfwayX, y1, roughness)                              
                         # Lower-right
-                        self.midpointDisplacement(halfwayX, halfwayY, x1, y1, roughness, minHeight, maxHeight)
+                        self.midpointDisplacement(halfwayX, halfwayY, x1, y1, roughness)
 
-        def seedIntervals(self, x0 = 0, y0 = 0, x1 = 1, y1 = 1, minHeight = 0, maxHeight = 1, subdivisions = 0, toroidal = False):
+        def seedIntervals(self, x0 = 0, y0 = 0, x1 = 1, y1 = 1, subdivisions = 0, toroidal = False):
                 if x1 - x0 > 1:
                         stepSize = int((x1 - x0) / subdivisions)
                         if stepSize > 0:
@@ -154,7 +155,7 @@ class Terrain():
                                 # Seed values
                                 for xSteps in range(subdivisions+1):
                                         for ySteps in range(subdivisions+1):
-                                                self.grid[xSteps*stepSize][ySteps*stepSize] = min(max(random.uniform(minHeight, maxHeight), minHeight), maxHeight)
+                                                self.grid[xSteps*stepSize][ySteps*stepSize] = min(max(random.uniform(self.minHeight, self.maxHeight), self.minHeight), self.maxHeight)
 
                                 # In toroidal grid, north-south edges are identical, as are east-west                
                                 if toroidal:
@@ -171,42 +172,41 @@ class Terrain():
                                         for y in range(len(self.grid)):
                                                 self.grid[-1][y] = self.grid[0][y]
 
-        def seededDiamondSquare(self, x0, y0, x1, y1, minHeight, maxHeight, roughness, subdivisions, toroidal = False, fillSubGrids = True):
+        def seededDiamondSquare(self, x0, y0, x1, y1, roughness, subdivisions, toroidal = False, fillSubGrids = True):
                 subdivisions = int(math.pow(2, subdivisions))
                 if x1 - x0 > 1:
                         stepSize = int((x1 - x0) / subdivisions)
                         if stepSize > 0:
                                 # Generate height values for subgrid corners
-                                self.seedIntervals(x0, y0, x1, y1, minHeight, maxHeight, subdivisions, toroidal)
+                                self.seedIntervals(x0, y0, x1, y1, subdivisions, toroidal)
 
                                 # Perform midpoint displacement on subgrids
                                 for xSteps in range(subdivisions):
                                         for ySteps in range(subdivisions):
                                                 startX = xSteps*stepSize
                                                 startY = ySteps*stepSize
-                                                if fillSubGrids: self.diamondSquare(startX, startY, startX+stepSize, startY+stepSize, roughness, minHeight, maxHeight)
+                                                if fillSubGrids: self.diamondSquare(startX, startY, startX+stepSize, startY+stepSize, roughness)
                         else:
                                 print("Seeding of 'Diamond Square' failed: stepsize too small")
                                                 
 
-        def seededMidpointDisplacement(self, x0, y0, x1, y1, minHeight, maxHeight, roughness, subdivisions, toroidal = False, fillSubGrids = True):
+        def seededMidpointDisplacement(self, x0, y0, x1, y1, roughness, subdivisions, toroidal = False, fillSubGrids = True):
                 subdivisions = int(math.pow(2, subdivisions))
                 if x1 - x0 > 1:
                         stepSize = int((x1 - x0) / subdivisions)
                         if stepSize > 0:
                                 # Generate height values for subgrid corners
-                                self.seedIntervals(x0, y0, x1, y1, minHeight, maxHeight, subdivisions, toroidal)
+                                self.seedIntervals(x0, y0, x1, y1, subdivisions, toroidal)
 
                                 # Perform midpoint displacement on subgrids
                                 for xSteps in range(subdivisions):
                                         for ySteps in range(subdivisions):
                                                 startX = xSteps*stepSize
                                                 startY = ySteps*stepSize
-                                                if fillSubGrids: self.midpointDisplacement(startX, startY, startX+stepSize, startY+stepSize, roughness, minHeight, maxHeight)
+                                                if fillSubGrids: self.midpointDisplacement(startX, startY, startX+stepSize, startY+stepSize, roughness)
                         else:
                                 print("Seeding of 'Midpoint Displacement' failed: stepsize too small")
                                                 
-
         def printGrid(self):
                 print("")
                 if len(self.grid[0]) > 0:
