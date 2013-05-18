@@ -30,10 +30,10 @@ class Map:
                 # Shadowing
                 self.useShadows = True
                 self.minHeightForShadows = 0
-                self.occlusionSteps = 3
+                self.occlusionSteps = 5
 		self.xOccluderDir = 1
 		self.yOccluderDir = 0
-		self.occlusionHeight = 0.01
+		self.occlusionHeight = 0
 		# Calculate grid of colors
 		self.useColors = True
 		self.interpColorAcrossBands = False
@@ -201,10 +201,11 @@ class Map:
 		
 		return chosenColor
 
+        # Larger shadowing numbers indicate deeper shadows
 	def getLocShadowing(self, x, y):
 		# Check location is on-grid
 		shadowed = False
-		shadowing = 0
+		shadowing = 0.0
 		##print("Checking shadows for " + str((x,y)) + " (height = "+str(thisHeight)+"):")
 		if x >= 0 and x < self.windowDim:
 			if y >= 0 and y < self.windowDim:
@@ -214,12 +215,15 @@ class Map:
                                         # StepsTaken measured so nearby occluders can block more light
                                         # Check occlusion in direction of light source
                                         stepsTaken = self.isLocShadowedByDir(x, y, self.xOccluderDir, self.yOccluderDir, self.occlusionSteps)
-                                        shadowing += 0.2 * stepsTaken/self.occlusionSteps
+                                        if stepsTaken > 0:
+                                                shadowing += 0.07 * self.occlusionSteps/stepsTaken
                                         # Check occlusion orthogonal to direction of light source
                                         stepsTaken = self.isLocShadowedByDir(x, y, -self.xOccluderDir, self.yOccluderDir, self.occlusionSteps)
-                                        shadowing += 0.1 * stepsTaken/self.occlusionSteps
+                                        if stepsTaken > 0:
+                                                shadowing += 0.007 * self.occlusionSteps/stepsTaken
                                         stepsTaken = self.isLocShadowedByDir(x, y, self.xOccluderDir, -self.yOccluderDir, self.occlusionSteps)
-                                        shadowing += 0.1 * stepsTaken/self.occlusionSteps
+                                        if stepsTaken > 0:
+                                                shadowing += 0.007 * self.occlusionSteps/stepsTaken
 		return shadowing
 
         # Returns 0 if no occlusion, otherwise number of steps to occluder
@@ -230,7 +234,7 @@ class Map:
 			occX = (x + (xOccDir * (step + 1))) % len(self.terrain.grid)
 			occY = (y + (yOccDir * (step + 1))) % len(self.terrain.grid)
 			if self.terrain.grid[occX][occY] >= thisHeight + self.occlusionHeight:
-                                stepsTaken = steps
+                                stepsTaken = step
 				break
 		return stepsTaken
 	
