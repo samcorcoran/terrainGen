@@ -27,6 +27,26 @@ class Map:
 		self.navStep = int(0.1 * len(self.terrain.grid))
 		print("init navStep: " + str(self.navStep))
 
+                # Render all sea as a single tile underneath land tiles
+                self.flatSea = flatSea
+
+		# Color bands (terrain height cut offs, e.g. 0.65 seaLevel means that heights below 0.65 are sea)
+		# Palette: Island Contouring
+		self.seaLevel = 0.65
+		self.sandLevel = 0.68
+		self.grassLevel = 0.85
+		self.hillLevel = 0.92
+		self.mountainLevel = 0.98
+       	        self.minHeightForShadows = self.seaLevel
+
+		# Palette: In-land hills and mountains colouring
+		#self.minHeightForShadows = 0.15
+		#seaLevel = 0.15 * 255
+		#sandLevel = 0.2 * 255
+		#grassLevel = 0.55 * 255
+		#hillLevel = 0.75 * 255
+		#mountainLevel = 0.9 * 255
+
                 # Shadowing
                 self.useShadows = True
                 self.shadowStrength = 0.2
@@ -121,64 +141,54 @@ class Map:
 	def getTerrainColor(self, height, x, y):
 		# Height proportions at which different terrain colors end
 		height *= 255
-		
-		# In-land hills and mountains colouring
-		#self.minHeightForShadows = 0.15
-		#seaLevel = 0.15 * 255
-		#sandLevel = 0.2 * 255
-		#grassLevel = 0.55 * 255
-		#hillLevel = 0.75 * 255
-		#mountainLevel = 0.9 * 255
-		
-		# Island colouring
-		self.minHeightForShadows = 0.65
-		seaLevel = 0.65 * 255
-		sandLevel = 0.68 * 255
-		grassLevel = 0.85 * 255
-		hillLevel = 0.92 * 255
-		mountainLevel = 0.98 * 255
-		
-		if height < seaLevel:
+
+		seaLevelCol = self.seaLevel * 255
+		sandLevelCol = self.sandLevel * 255
+		grassLevelCol = self.grassLevel * 255
+		hillLevelCol = self.hillLevel * 255
+		mountainLevelCol = self.mountainLevel * 255
+
+		if height < seaLevelCol:
 			seaMin = 50
 			seaMax = 140
 			t = 0.5
 			if self.interpColorAcrossBands:
-				t = height/seaLevel
+				t = height/seaLevelCol
 			c = seaMin + t*(seaMax-seaMin)
 			chosenColor = [0, 0, c]
-		elif height < sandLevel:
+		elif height < sandLevelCol:
 			sandMin = 75
 			sandMax = 125
 			# Interpolation is reversed so low-sand is light green and high-grass is dark green
 			t = 0.5
 			if self.interpColorAcrossBands:
-				t = 1-((height-seaLevel)/(sandLevel-seaLevel))
+				t = 1-((height-seaLevelCol)/(sandLevelCol-seaLevelCol))
 			c = sandMin + t*(sandMax-sandMin)
 			chosenColor = [c, c, 0]
 			#chosenColor = [255, 0, 0]
-		elif height < grassLevel:
+		elif height < grassLevelCol:
 			grassMin = 30
 			grassMax = 80
 			t = 0.5
 			if self.interpColorAcrossBands:
 				# Interpolation is reversed so low-grass is light green and high-grass is dark green
-				t = 1-((height-sandLevel)/(grassLevel-sandLevel))
+				t = 1-((height-sandLevelCol)/(grassLevelCol-sandLevelCol))
 			c = grassMin + t*(grassMax-grassMin)
 			chosenColor = [0, c, 0]
-		elif height < hillLevel:
+		elif height < hillLevelCol:
 			hillMin = 30
 			hillMax = 55
 			t = 0.5
 			if self.interpColorAcrossBands:
-				t = ((height-grassLevel)/(hillLevel-grassLevel))
+				t = ((height-grassLevelCol)/(hillLevelCol-grassLevelCol))
 			c = hillMin + t*(hillMax-hillMin)                        
 			chosenColor = [c, c, 0]
-		elif height < mountainLevel:
+		elif height < mountainLevelCol:
 			mountainMin = 60
 			mountainMax = 170
 			t = 0.5
 			if self.interpColorAcrossBands:
-				t = ((height-hillLevel)/(mountainLevel-hillLevel))
+				t = ((height-hillLevelCol)/(mountainLevelCol-hillLevelCol))
 			c = mountainMin + t*(mountainMax-mountainMin)                        
 			chosenColor = [c, c, c]
 		else:
@@ -186,7 +196,7 @@ class Map:
 			snowMax = 255
 			t = 0.5
 			if self.interpColorAcrossBands:
-				t = ((height-mountainLevel)/(1-mountainLevel))
+				t = ((height-mountainLevelCol)/(1-mountainLevelCol))
 			c = snowMin + t*(snowMax-snowMin)
 			chosenColor = [c, c, c]
 
