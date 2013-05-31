@@ -29,6 +29,7 @@ class Map:
 
                 # Shadowing
                 self.useShadows = True
+                self.shadowStrength = 0.2
                 self.minHeightForShadows = 0
                 self.occlusionSteps = 5
 		self.xOccluderDir = 1
@@ -194,7 +195,7 @@ class Map:
 
 		# Apply shadowing
 		if self.useShadows:
-                        shadowing = 1 - self.getLocShadowing(x, y)
+                        shadowing = min((1 - self.getLocShadowing(x, y)) * (1-self.shadowStrength), 1)
                         chosenColor[0] = int(chosenColor[0] * shadowing)
                         chosenColor[1] = int(chosenColor[1] * shadowing)
                         chosenColor[2] = int(chosenColor[2] * shadowing)
