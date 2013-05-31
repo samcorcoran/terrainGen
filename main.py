@@ -26,6 +26,8 @@ toroidal = True
 
 smoothTerrain = True
 smoothingIterations = 1
+
+flatSea = True
 ###
 
 # Grid dimensions formula: (2^n)+1
@@ -65,7 +67,7 @@ if smoothTerrain:
 
 # Draw
 t = tk.Tk()
-aMap = draw.Map(t, landscape, windowDim, blockDim)
+aMap = draw.Map(t, landscape, windowDim, blockDim, flatSea)
 t.bind_all('<Key>', aMap.keyPressed)
 aMap.createRects()
 while True:

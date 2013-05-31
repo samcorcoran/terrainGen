@@ -1,7 +1,7 @@
 import Tkinter as tk
 
 class Map:
-	def __init__(self, t, terrain, windowDim, blockDim):
+	def __init__(self, t, terrain, windowDim, blockDim, flatSea):
 		self.i = tk.PhotoImage(width=windowDim, height=windowDim)
 		self.c = tk.Canvas(t, width=windowDim, height=windowDim)
 		self.c.pack()
@@ -58,7 +58,8 @@ class Map:
 		# Calculate grid of colors
 		self.useColors = True
 		self.interpColorAcrossBands = False
-		self.colorGrid = self.getColorGrid()
+		self.colorGrid2d = self.getColorGrid2D()
+
 		# Track canvas rectangles
 		self.rectangles = []
 
@@ -68,27 +69,31 @@ class Map:
 
 	# Create canvas rectangles of correct dimensions and starting locations
 	def createRects(self):
+                # Flat sea is a single window-wide tile
+                if self.flatSea:
+               		strCol = '#%02x%02x%02x' % (0, 0, 80)
+                        seaRect = self.c.create_rectangle(0, 0, self.windowDim, self.windowDim, outline = strCol, fill = strCol)
+                
 		gridDim = len(self.terrain.grid)
 		macroRow = 0; macroCol = 0              
 		# Draw colors as rects
-		for color in self.colorGrid:
-			# Get rect coords
-			x0 = macroCol * self.blockDim + self.xOffset
-			y0 = macroRow * self.blockDim + self.yOffset
-			x1 = x0 + self.blockDim
-			y1 = y0 + self.blockDim
-			# Draw Rect
-			strCol = '#%02x%02x%02x' % tuple(color)
-			# NOTE: Canvas coordinates start from bottom-left, so coordinates inverted to avoid terrain being transposed
-			rect = self.c.create_rectangle(y0, x0, y1, x1, outline = strCol, fill = strCol)
-			self.rectangles.append(rect)
+		for row in range(gridDim):
+                        for col in range(gridDim):
+                                # If terrain is above sea level, create tile
+                                if not self.flatSea or self.terrain.grid[row][col] > 0.65:
+                                        # Get rect coords
+                                        x0 = col * self.blockDim + self.xOffset
+                                        y0 = row * self.blockDim + self.yOffset
+                                        x1 = x0 + self.blockDim
+                                        y1 = y0 + self.blockDim
 
-			# Increment counters
-			macroCol += 1
-			# After last column of colours in row, move to start of next row
-			if macroCol == gridDim:
-				macroRow +=1; macroCol = 0
-				#break
+                                        color = self.colorGrid2d[row][col]
+                                        # Draw Rect
+                                        strCol = '#%02x%02x%02x' % tuple(color)
+                                        # NOTE: Canvas coordinates start from bottom-left, so coordinates inverted to avoid terrain being transposed
+                                        rect = self.c.create_rectangle(y0, x0, y1, x1, outline = strCol, fill = strCol)
+                                        self.rectangles.append(rect)
+                print("Total rects: " + str(len(self.rectangles)))
 
 	# Moves tile rectangles according to x and y offset values
 	def updateRects(self):
@@ -117,10 +122,10 @@ class Map:
 			self.c.move(rect, xShift, yShift)
 		self.yOffset = 0
 		self.xOffset = 0
-		
-	def getColorGrid(self):
-		gridDim = len(self.terrain.grid)
-		colorGrid = []
+
+	def getColorGrid2D(self):
+                gridDim = len(self.terrain.grid)
+		colorGrid2d = [[1 for x in range(gridDim)] for y in range(gridDim)]
 		# Iterate over columns
 		for x in range(gridDim):
 			# Iterate over rows
@@ -135,8 +140,9 @@ class Map:
 				else:
 					intensity = int(((height-self.terrain.minHeight)/self.terrain.maxHeight) * 255)
 					color = [intensity for i in range(3)]
-				colorGrid.append(color)
-		return colorGrid
+				colorGrid2d[x][y] = color
+		return colorGrid2d
+
 
 	def getTerrainColor(self, height, x, y):
 		# Height proportions at which different terrain colors end
