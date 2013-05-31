@@ -57,7 +57,7 @@ class Map:
 		self.occlusionHeight = 0
 		# Calculate grid of colors
 		self.useColors = True
-		self.interpColorAcrossBands = False
+		self.interpColorAcrossBands = True
 		self.colorGrid2d = self.getColorGrid2D()
 
 		# Track canvas rectangles
