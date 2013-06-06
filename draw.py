@@ -1,10 +1,12 @@
 import tkinter as tk
+import pyglet
 
 class Map:
-    def __init__(self, t, terrain, windowDim, blockDim, flatSea):
-        self.i = tk.PhotoImage(width=windowDim, height=windowDim)
-        self.c = tk.Canvas(t, width=windowDim, height=windowDim)
-        self.c.pack()
+    def __init__(self, terrain, windowDim, blockDim, flatSea):
+        # TK functionality, commented out
+        # self.i = tk.PhotoImage(width=windowDim, height=windowDim)
+        # self.c = tk.Canvas(t, width=windowDim, height=windowDim)
+        # self.c.pack()
 
         # Store grid information
         self.terrain = terrain

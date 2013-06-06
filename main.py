@@ -3,6 +3,8 @@ import tkinter as tk
 import math
 import random
 
+import pyglet
+
 import terrain
 import draw
 
@@ -66,14 +68,23 @@ if smoothTerrain:
 #landscape.printGridTransposed()
 
 # Draw
-t = tk.Tk()
-aMap = draw.Map(t, landscape, windowDim, blockDim, flatSea)
-t.bind_all('<Key>', aMap.keyPressed)
-aMap.createRects()
-while True:
-    aMap.applyKeyPressOffsets()
-    if aMap.mapChanged:
-        aMap.updateRects()
-        aMap.mapChanged = False
-    aMap.updateCanvas()
-t.mainloop()
+aMap = draw.Map(landscape, windowDim, blockDim, flatSea)
+window = pyglet.window.Window(resizable=True)
+
+@window.event
+def on_draw():
+    window.clear()
+    pyglet.gl.glColor4f(1.0, 0, 0, 1.0)
+    pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i',(10, 15, 30, 35)))
+
+pyglet.app.run()
+# t = tk.Tk()
+# t.bind_all('<Key>', aMap.keyPressed)
+# aMap.createRects()
+# while True:
+#     aMap.applyKeyPressOffsets()
+#     if aMap.mapChanged:
+#         aMap.updateRects()
+#         aMap.mapChanged = False
+#     aMap.updateCanvas()
+# t.mainloop()
