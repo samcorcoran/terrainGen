@@ -4,6 +4,7 @@ import math
 import random
 
 import pyglet
+from pyglet.gl import *
 
 import terrain
 import draw
@@ -68,16 +69,20 @@ if smoothTerrain:
 #landscape.printGridTransposed()
 
 # Draw
-aMap = draw.Map(landscape, windowDim, blockDim, flatSea)
-window = pyglet.window.Window(resizable=True)
+#window = pyglet.window.Window(resizable=True)
 
-@window.event
-def on_draw():
-    window.clear()
-    pyglet.gl.glColor4f(1.0, 0, 0, 1.0)
-    pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i',(10, 15, 30, 35)))
+aMapWindow = draw.MapWindow(landscape, windowDim, blockDim, flatSea)
 
-pyglet.app.run()
+# @window.event
+# def on_draw():
+#     window.clear()
+#     pyglet.gl.glColor4f(1.0, 0, 0, 1.0)
+#     pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i',(10, 15, 30, 35)))
+
+print("Running app")
+sys.exit(pyglet.app.run())
+print("Ran app")
+
 # t = tk.Tk()
 # t.bind_all('<Key>', aMap.keyPressed)
 # aMap.createRects()

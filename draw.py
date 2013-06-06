@@ -1,8 +1,14 @@
 import tkinter as tk
 import pyglet
+from pyglet.gl import *
 
-class Map:
+class MapWindow(pyglet.window.Window):
     def __init__(self, terrain, windowDim, blockDim, flatSea):
+        super(MapWindow, self).__init__(fullscreen=False, caption='TerrainGen Map')
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
         # TK functionality, commented out
         # self.i = tk.PhotoImage(width=windowDim, height=windowDim)
         # self.c = tk.Canvas(t, width=windowDim, height=windowDim)
@@ -64,6 +70,10 @@ class Map:
 
         # Track canvas rectangles
         self.rectangles = []
+
+    #@window.event
+    def on_draw():
+        window.clear()
 
     # Redraw canvas
     def updateCanvas(self):
