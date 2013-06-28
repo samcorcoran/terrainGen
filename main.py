@@ -80,7 +80,7 @@ aMapWindow = draw.MapWindow(landscape, windowDim, blockDim, flatSea)
 #     pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i',(10, 15, 30, 35)))
 
 print("Running app")
-sys.exit(pyglet.app.run())
+pyglet.app.run()
 print("Ran app")
 
 # t = tk.Tk()

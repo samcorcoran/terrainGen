@@ -2,13 +2,15 @@ import tkinter as tk
 import pyglet
 from pyglet.gl import *
 
+import tile
+
 class MapWindow(pyglet.window.Window):
     def __init__(self, terrain, windowDim, blockDim, flatSea):
         super(MapWindow, self).__init__(fullscreen=False, caption='TerrainGen Map')
 
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
+        
         # TK functionality, commented out
         # self.i = tk.PhotoImage(width=windowDim, height=windowDim)
         # self.c = tk.Canvas(t, width=windowDim, height=windowDim)
@@ -70,10 +72,37 @@ class MapWindow(pyglet.window.Window):
 
         # Track canvas rectangles
         self.rectangles = []
+        # Track bottom-left coordinates of tiles
+        self.tiles = []
 
     #@window.event
-    def on_draw():
-        window.clear()
+    def on_draw(self):
+        self.clear()
+        # Draw rectangles
+        pyglet.gl.glColor4f(1.0,0,0,1.0)
+        pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i', (10, 15, 300, 65)))        
+        self.drawATile(100, 100, 50)
+        xStart = 100
+        yStart = 100
+        height = 50
+        print("Tiles length:" + tiles.len())
+        self.drawTiles(10)
+
+    def drawTiles(self, tileHeight):
+        for tile in self.tiles:
+            print("tile X loc: " + tile.xLoc)
+
+
+    def drawATile(self, xStart, yStart, height):
+        # Two triangles with four points
+        # Draws anti-clockwise from tile's bottom-left corner
+        pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
+            [0, 1, 2, 0, 2, 3],
+            ('v2i', (xStart, yStart,
+            xStart+height, yStart,
+            xStart+height, yStart+height,
+            xStart, yStart+height))
+        )
 
     # Redraw canvas
     def updateCanvas(self):
@@ -105,6 +134,9 @@ class MapWindow(pyglet.window.Window):
                     # NOTE: Canvas coordinates start from bottom-left, so coordinates inverted to avoid terrain being transposed
                     rect = self.c.create_rectangle(y0, x0, y1, x1, outline = strCol, fill = strCol)
                     self.rectangles.append(rect)
+                    newTile = Tile(x0, y0, self.blockDim)
+                    self.tiles.append(newTile)
+
         print("Total rects: " + str(len(self.rectangles)))
 
     # Moves tile rectangles according to x and y offset values
