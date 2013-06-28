@@ -85,7 +85,7 @@ class MapWindow(pyglet.window.Window):
         xStart = 100
         yStart = 100
         height = 50
-        print("Tiles length:" + tiles.len())
+        print("Tiles length:" + str(len(self.tiles)))
         self.drawTiles(10)
 
     def drawTiles(self, tileHeight):
