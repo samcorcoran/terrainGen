@@ -11,6 +11,7 @@ class MapWindow(pyglet.window.Window):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         
+        self.set_size(windowDim, windowDim)
         # TK functionality, commented out
         # self.i = tk.PhotoImage(width=windowDim, height=windowDim)
         # self.c = tk.Canvas(t, width=windowDim, height=windowDim)
@@ -80,18 +81,15 @@ class MapWindow(pyglet.window.Window):
         self.clear()
         # Draw rectangles
         pyglet.gl.glColor4f(1.0,0,0,1.0)
-        pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i', (10, 15, 300, 65)))        
-        self.drawATile(100, 100, 50)
-        xStart = 100
-        yStart = 100
-        height = 50
+        #pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i', (10, 15, 300, 65)))        
+        #self.drawATile(100, 100, 50)
         print("Tiles length:" + str(len(self.tiles)))
         self.drawTiles(10)
 
     def drawTiles(self, tileHeight):
         for tile in self.tiles:
-            print("tile X loc: " + tile.xLoc)
-
+            tile.printTile()
+            self.drawTile(tile)
 
     def drawATile(self, xStart, yStart, height):
         # Two triangles with four points
@@ -104,6 +102,16 @@ class MapWindow(pyglet.window.Window):
             xStart, yStart+height))
         )
 
+    def drawTile(self, tile):
+        # Draws a tile based on data in object
+        pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
+            [0, 1, 2, 0, 2, 3],
+            ('v2i', (tile.xLoc, tile.yLoc,
+            tile.xLoc+tile.height, tile.yLoc,
+            tile.xLoc+tile.height, tile.yLoc+tile.height,
+            tile.xLoc, tile.yLoc+tile.height))
+        )
+
     # Redraw canvas
     def updateCanvas(self):
         self.c.update()
@@ -111,9 +119,10 @@ class MapWindow(pyglet.window.Window):
     # Create canvas rectangles of correct dimensions and starting locations
     def createRects(self):
         # Flat sea is a single window-wide tile
+        print("Create rects")
         if self.flatSea:
             strCol = '#%02x%02x%02x' % (0, 0, 80)
-            seaRect = self.c.create_rectangle(0, 0, self.windowDim, self.windowDim, outline = strCol, fill = strCol)
+            #seaRect = self.c.create_rectangle(0, 0, self.windowDim, self.windowDim, outline = strCol, fill = strCol)
                 
         gridDim = len(self.terrain.grid)
         macroRow = 0; macroCol = 0              
@@ -132,9 +141,10 @@ class MapWindow(pyglet.window.Window):
                     # Draw Rect
                     strCol = '#%02x%02x%02x' % tuple(color)
                     # NOTE: Canvas coordinates start from bottom-left, so coordinates inverted to avoid terrain being transposed
-                    rect = self.c.create_rectangle(y0, x0, y1, x1, outline = strCol, fill = strCol)
-                    self.rectangles.append(rect)
-                    newTile = Tile(x0, y0, self.blockDim)
+                    ##rect = self.c.create_rectangle(y0, x0, y1, x1, outline = strCol, fill = strCol)
+                    ##self.rectangles.append(rect)
+                    newTile = tile.Tile(x0, y0, self.blockDim)
+                    print("Appending tile")
                     self.tiles.append(newTile)
 
         print("Total rects: " + str(len(self.rectangles)))

@@ -13,7 +13,7 @@ import draw
 
 ### Generation Parameters ###
 windowDim = 800
-n = 7
+n = 1
 
 minHeight = 0
 maxHeight = 1
@@ -35,6 +35,7 @@ flatSea = True
 
 # Grid dimensions formula: (2^n)+1
 gridDim = int(math.pow(2, n)) + 1
+print("gridDim: " + str(gridDim))
 
 # Adjust window size to fit grid columns exactly
 blockDim = 1
@@ -72,6 +73,7 @@ if smoothTerrain:
 #window = pyglet.window.Window(resizable=True)
 
 aMapWindow = draw.MapWindow(landscape, windowDim, blockDim, flatSea)
+aMapWindow.createRects()
 
 # @window.event
 # def on_draw():
