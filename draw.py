@@ -1,4 +1,3 @@
-import tkinter as tk
 import pyglet
 from pyglet.gl import *
 
@@ -12,10 +11,6 @@ class MapWindow(pyglet.window.Window):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         
         self.set_size(windowDim, windowDim)
-        # TK functionality, commented out
-        # self.i = tk.PhotoImage(width=windowDim, height=windowDim)
-        # self.c = tk.Canvas(t, width=windowDim, height=windowDim)
-        # self.c.pack()
 
         # Store grid information
         self.terrain = terrain
@@ -59,7 +54,7 @@ class MapWindow(pyglet.window.Window):
         #mountainLevel = 0.9 * 255
 
         # Shadowing
-        self.useShadows = True
+        self.useShadows = False
         self.shadowStrength = 0.2
         self.minHeightForShadows = 0
         self.occlusionSteps = 5
@@ -71,8 +66,6 @@ class MapWindow(pyglet.window.Window):
         self.interpColorAcrossBands = True
         self.colorGrid2d = self.getColorGrid2D()
 
-        # Track canvas rectangles
-        self.rectangles = []
         # Track bottom-left coordinates of tiles
         self.tiles = []
 
@@ -81,29 +74,18 @@ class MapWindow(pyglet.window.Window):
         self.clear()
         # Draw rectangles
         pyglet.gl.glColor4f(1.0,0,0,1.0)
-        #pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2i', (10, 15, 300, 65)))        
-        #self.drawATile(100, 100, 50)
         print("Tiles length:" + str(len(self.tiles)))
         self.drawTiles(10)
 
     def drawTiles(self, tileHeight):
         for tile in self.tiles:
-            tile.printTile()
+            #tile.printTile()
             self.drawTile(tile)
-
-    def drawATile(self, xStart, yStart, height):
-        # Two triangles with four points
-        # Draws anti-clockwise from tile's bottom-left corner
-        pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
-            [0, 1, 2, 0, 2, 3],
-            ('v2i', (xStart, yStart,
-            xStart+height, yStart,
-            xStart+height, yStart+height,
-            xStart, yStart+height))
-        )
 
     def drawTile(self, tile):
         # Draws a tile based on data in object
+        tileCol = tile.color
+        pyglet.gl.glColor4f(tileCol[0], tileCol[1], tileCol[2], 1.0)
         pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
             [0, 1, 2, 0, 2, 3],
             ('v2i', (tile.xLoc, tile.yLoc,
@@ -116,38 +98,32 @@ class MapWindow(pyglet.window.Window):
     def updateCanvas(self):
         self.c.update()
 
-    # Create canvas rectangles of correct dimensions and starting locations
-    def createRects(self):
+    # Create tiles of correct dimensions and starting locations
+    def createTiles(self):
         # Flat sea is a single window-wide tile
         print("Create rects")
         if self.flatSea:
             strCol = '#%02x%02x%02x' % (0, 0, 80)
-            #seaRect = self.c.create_rectangle(0, 0, self.windowDim, self.windowDim, outline = strCol, fill = strCol)
                 
         gridDim = len(self.terrain.grid)
         macroRow = 0; macroCol = 0              
-        # Draw colors as rects
+        # Draw colors as tiles
         for row in range(gridDim):
             for col in range(gridDim):
                 # If terrain is above sea level, create tile
                 if not self.flatSea or self.terrain.grid[row][col] > 0.65:
-                    # Get rect coords
+                    # Get tile coords
                     x0 = col * self.blockDim + self.xOffset
                     y0 = row * self.blockDim + self.yOffset
                     x1 = x0 + self.blockDim
                     y1 = y0 + self.blockDim
 
                     color = self.colorGrid2d[row][col]
-                    # Draw Rect
-                    strCol = '#%02x%02x%02x' % tuple(color)
-                    # NOTE: Canvas coordinates start from bottom-left, so coordinates inverted to avoid terrain being transposed
-                    ##rect = self.c.create_rectangle(y0, x0, y1, x1, outline = strCol, fill = strCol)
-                    ##self.rectangles.append(rect)
-                    newTile = tile.Tile(x0, y0, self.blockDim)
-                    print("Appending tile")
+
+                    newTile = tile.Tile(x0, y0, self.blockDim, tuple(color))
                     self.tiles.append(newTile)
 
-        print("Total rects: " + str(len(self.rectangles)))
+        print("Total tiles: " + str(len(self.tiles)))
 
     # Moves tile rectangles according to x and y offset values
     def updateRects(self):
@@ -261,7 +237,8 @@ class MapWindow(pyglet.window.Window):
             chosenColor = [c, c, c]
 
         # Ensure integer values for colors
-        chosenColor = [int(chosenColor[0]), int(chosenColor[1]), int(chosenColor[2])]
+        chosenColor = [int(chosenColor[0])/255, int(chosenColor[1])/255, int(chosenColor[2])/255]
+        #print("chosen color: " + str(chosenColor))
 
         # Apply shadowing
         if self.useShadows:
