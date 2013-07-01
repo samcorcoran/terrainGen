@@ -29,7 +29,7 @@ toroidal = True
 smoothTerrain = True
 smoothingIterations = 1
 
-flatSea = False
+flatSea = True
 ###
 
 # Grid dimensions formula: (2^n)+1

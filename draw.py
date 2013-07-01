@@ -103,7 +103,7 @@ class MapWindow(pyglet.window.Window):
         # Flat sea is a single window-wide tile
         print("Create rects")
         if self.flatSea:
-            strCol = '#%02x%02x%02x' % (0, 0, 80)
+            self.tiles.append(tile.Tile(0, 0, self.windowDim, (0, 0, 0.25)))
                 
         gridDim = len(self.terrain.grid)
         macroRow = 0; macroCol = 0              
