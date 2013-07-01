@@ -30,14 +30,14 @@ class MapWindow(pyglet.window.Window):
         self.totalXOffset = 0
         self.yOffset = 0
         self.totalYOffset = 0
-        # Navigation step size: 10% of grid width
-        self.navStep = int(0.1 * len(self.terrain.grid))
+        # Navigation step size: 10% of grid width, minimum of 1
+        self.navStep = max(1, int(0.1 * len(self.terrain.grid)))
         print("init navStep: " + str(self.navStep))
 
         # Render all sea as a single tile underneath land tiles
         self.flatSea = flatSea
         self.flatSeaColor = (0, 0, 0.25)
-        pyglet.gl.glClearColor(self.flatSeaColor[0], self.flatSeaColor[1], self.flatSeaColor[2], 1)
+        #pyglet.gl.glClearColor(self.flatSeaColor[0], self.flatSeaColor[1], self.flatSeaColor[2], 1)
 
         # Color bands (terrain height cut offs, e.g. 0.65 seaLevel means that heights below 0.65 are sea)
         # Palette: Island Contouring
@@ -75,9 +75,11 @@ class MapWindow(pyglet.window.Window):
     #@window.event
     def on_draw(self):
         self.clear()
-        # Draw rectangles
+        # If required, draw baseline water
+        self.drawFlatSea()
+        # Draw terrain tiles
         pyglet.gl.glColor4f(1.0,0,0,1.0)
-        print("Tiles length:" + str(len(self.tiles)))
+        print("Total terrain tiles:" + str(len(self.tiles)))
         self.drawTiles()
 
     def drawTiles(self):
@@ -88,8 +90,8 @@ class MapWindow(pyglet.window.Window):
     # Draws a tile based on data in object
     def drawTile(self, tile):
         # Apply shifts
-        xShift = self.xOffset * self.blockDim
-        yShift = self.yOffset * self.blockDim
+        xShift = self.xOffset
+        yShift = self.yOffset
 
         x0 = tile.xLoc + xShift
         y0 = tile.yLoc + yShift
@@ -98,27 +100,33 @@ class MapWindow(pyglet.window.Window):
         # Shift x coordinates
         if x0 < 0:
             x0 += self.windowDim
-        elif x0 + tile.height >= self.windowDim:
+        elif x0 + tile.height > self.windowDim:
             x0 -= self.windowDim
         # Shift y coordinates
         if y0 < 0:
             y0 += self.windowDim
-        elif y0 + tile.height >= self.windowDim:
+        elif y0 + tile.height > self.windowDim:
             y0 -= self.windowDim
-        
-        x1 = x0 + tile.height
-        y1 = y0 + tile.height        
 
-        # Set tile colour
-        tileCol = tile.color
-        pyglet.gl.glColor4f(tileCol[0], tileCol[1], tileCol[2], 1.0)
+        self.drawSquare(x0, y0, tile.height, tile.color)
+
+    # Draw a single rectangle behind terrain colored as sea
+    def drawFlatSea(self):
+        # Draw flat sea
+        if self.flatSea:
+            print("Flat sea top coord: " + str(self.terrain.xDim * self.blockDim))
+            self.drawSquare(0, 0, self.terrain.xDim * self.blockDim, self.flatSeaColor)
+
+    def drawSquare(self, x0, y0, height, color):
+        # Set square colour
+        pyglet.gl.glColor4f(color[0], color[1], color[2], 1.0)
         # Draw tile as two triangles
         pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
             [0, 1, 2, 0, 2, 3],
             ('v2i', (x0, y0,
-                x1, y0,
-                x1, y1,
-                x0, y1))
+                x0+height, y0,
+                x0+height, y0+height,
+                x0, y0+height))
         )
 
     # Redraw canvas
@@ -129,10 +137,7 @@ class MapWindow(pyglet.window.Window):
     def createTiles(self):
         # Flat sea is a single window-wide tile
         print("Creating tiles...")
-        #if self.flatSea:
-        #    self.tiles.append(tile.Tile(0, 0, self.windowDim, (0, 0, 0.25)))
-                
-        gridDim = len(self.terrain.grid)
+        gridDim = self.terrain.xDim
         macroRow = 0; macroCol = 0              
         # Draw colors as tiles
         for row in range(gridDim):
@@ -141,7 +146,7 @@ class MapWindow(pyglet.window.Window):
                 if not self.flatSea or self.terrain.grid[row][col] > 0.65:
                     # Get tile coords
                     x0 = col * self.blockDim# + self.xOffset
-                    y0 = row * self.blockDim + self.yOffset
+                    y0 = row * self.blockDim# + self.yOffset
                     x1 = x0 + self.blockDim
                     y1 = y0 + self.blockDim
 
@@ -151,34 +156,6 @@ class MapWindow(pyglet.window.Window):
                     self.tiles.append(newTile)
 
         print("Total tiles: " + str(len(self.tiles)))
-
-    # Moves tile rectangles according to x and y offset values
-    def updateRects(self):
-        for rect in self.rectangles:
-            # Rect loc necessary to check for whether it is out of bounds
-            coords = self.c.coords(rect)
-
-            # Apply shifts
-            xShift = self.xOffset * self.blockDim
-            yShift = self.yOffset * self.blockDim
-            coords[0] += xShift
-            coords[1] += yShift
-
-            # Shift x coordinates
-            if coords[0] < 0:
-                xShift += self.windowDim
-            elif coords[0] >= self.windowDim:
-                xShift -= self.windowDim
-            # Shift y coordinates
-            if coords[1] < 0:
-                yShift += self.windowDim
-            elif coords[1] >= self.windowDim:
-                yShift -= self.windowDim
-                    # Perform move call on rectangle
-            #print("Rectangle " + str(rect) + " has coords: " + str(coords) + " and shifts: " + str(xShift) + " " + str(yShift))                        
-            self.c.move(rect, xShift, yShift)
-        self.yOffset = 0
-        self.xOffset = 0
 
     def getColorGrid2D(self):
         gridDim = len(self.terrain.grid)
@@ -316,21 +293,22 @@ class MapWindow(pyglet.window.Window):
     def applyKeyPressOffsets(self):
         # Apply keypress offsets
         if self.left:
-            self.xOffset += -self.navStep
+            self.xOffset += -self.navStep * self.blockDim
             self.resetKeys()
         elif self.right:
-            self.xOffset += self.navStep
+            self.xOffset += self.navStep * self.blockDim
+            print("Right offsetting by " + str(self.navStep) + " * " + str(self.blockDim))
             self.resetKeys()
         if self.up:
-            self.yOffset += self.navStep
+            self.yOffset += self.navStep * self.blockDim
             self.resetKeys()
         elif self.down:
-            self.yOffset += -self.navStep
+            self.yOffset += -self.navStep * self.blockDim
             self.resetKeys()
         
         # Keep offsets between +/- self.windowDim
         self.xOffset %= self.windowDim
-        self.yOffest %= self.windowDim
+        self.yOffset %= self.windowDim
 
         print("xOffset: " + str(self.xOffset))
         print("yOffset: " + str(self.yOffset))
