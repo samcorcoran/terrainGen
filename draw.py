@@ -1,5 +1,6 @@
 import pyglet
 from pyglet.gl import *
+from pyglet.window import key
 
 import tile
 
@@ -75,23 +76,50 @@ class MapWindow(pyglet.window.Window):
         # Draw rectangles
         pyglet.gl.glColor4f(1.0,0,0,1.0)
         print("Tiles length:" + str(len(self.tiles)))
-        self.drawTiles(10)
+        self.drawTiles()
 
-    def drawTiles(self, tileHeight):
+    def drawTiles(self):
         for tile in self.tiles:
             #tile.printTile()
             self.drawTile(tile)
 
+    # Draws a tile based on data in object
     def drawTile(self, tile):
-        # Draws a tile based on data in object
+        # Apply shifts
+        xShift = self.xOffset * self.blockDim
+        yShift = self.yOffset * self.blockDim
+
+        x0 = tile.xLoc + xShift
+        y0 = tile.yLoc + yShift
+
+        # Adjust locations if offsets resulted in out-of-bounds
+        # Shift x coordinates
+        if x0 < 0:
+            x0 += self.windowDim
+        elif x0 + tile.height >= self.windowDim:
+            x0 -= self.windowDim
+        x0 %= self.windowDim
+        
+        # Shift y coordinates
+        if y0 < 0:
+            y0 += self.windowDim
+        elif y0 + tile.height >= self.windowDim:
+            y0 -= self.windowDim
+        y0 %= self.windowDim
+        
+        x1 = x0 + tile.height
+        y1 = y0 + tile.height        
+
+        # Set tile colour
         tileCol = tile.color
         pyglet.gl.glColor4f(tileCol[0], tileCol[1], tileCol[2], 1.0)
+        # Draw tile as two triangles
         pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
             [0, 1, 2, 0, 2, 3],
-            ('v2i', (tile.xLoc, tile.yLoc,
-            tile.xLoc+tile.height, tile.yLoc,
-            tile.xLoc+tile.height, tile.yLoc+tile.height,
-            tile.xLoc, tile.yLoc+tile.height))
+            ('v2i', (x0, y0,
+                x1, y0,
+                x1, y1,
+                x0, y1))
         )
 
     # Redraw canvas
@@ -300,6 +328,8 @@ class MapWindow(pyglet.window.Window):
         elif self.down:
             self.yOffset += self.navStep
             self.resetKeys()
+        print("xOffset: " + str(self.xOffset))
+        print("yOffset: " + str(self.yOffset))
 
     def keyPressed(self, event):
         if event.keysym == 'Left':
@@ -318,3 +348,23 @@ class MapWindow(pyglet.window.Window):
         self.down = False
         self.left = False
         self.right = False
+
+    #@window.event
+    def on_key_press(self, symbol, modifiers):
+        if symbol == key.A:
+            print("The 'A' key was pressed.")
+        elif symbol == key.LEFT:
+            print("The left arrow key was pressed.")
+            self.left = True
+        elif symbol == key.RIGHT:
+            print("The right arrow key was pressed.")
+            self.right = True
+        elif symbol == key.UP:
+            print("The up arrow key was pressed.")
+            self.up = True
+        elif symbol == key.DOWN:
+            print("The down arrow key was pressed.")
+            self.down = True
+        elif symbol == key.ENTER:
+            print("The enter key was pressed.")
+        self.applyKeyPressOffsets()
