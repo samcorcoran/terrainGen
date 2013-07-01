@@ -36,6 +36,8 @@ class MapWindow(pyglet.window.Window):
 
         # Render all sea as a single tile underneath land tiles
         self.flatSea = flatSea
+        self.flatSeaColor = (0, 0, 0.25)
+        pyglet.gl.glClearColor(self.flatSeaColor[0], self.flatSeaColor[1], self.flatSeaColor[2], 1)
 
         # Color bands (terrain height cut offs, e.g. 0.65 seaLevel means that heights below 0.65 are sea)
         # Palette: Island Contouring
@@ -98,14 +100,11 @@ class MapWindow(pyglet.window.Window):
             x0 += self.windowDim
         elif x0 + tile.height >= self.windowDim:
             x0 -= self.windowDim
-        x0 %= self.windowDim
-        
         # Shift y coordinates
         if y0 < 0:
             y0 += self.windowDim
         elif y0 + tile.height >= self.windowDim:
             y0 -= self.windowDim
-        y0 %= self.windowDim
         
         x1 = x0 + tile.height
         y1 = y0 + tile.height        
@@ -129,9 +128,9 @@ class MapWindow(pyglet.window.Window):
     # Create tiles of correct dimensions and starting locations
     def createTiles(self):
         # Flat sea is a single window-wide tile
-        print("Create rects")
-        if self.flatSea:
-            self.tiles.append(tile.Tile(0, 0, self.windowDim, (0, 0, 0.25)))
+        print("Creating tiles...")
+        #if self.flatSea:
+        #    self.tiles.append(tile.Tile(0, 0, self.windowDim, (0, 0, 0.25)))
                 
         gridDim = len(self.terrain.grid)
         macroRow = 0; macroCol = 0              
@@ -141,7 +140,7 @@ class MapWindow(pyglet.window.Window):
                 # If terrain is above sea level, create tile
                 if not self.flatSea or self.terrain.grid[row][col] > 0.65:
                     # Get tile coords
-                    x0 = col * self.blockDim + self.xOffset
+                    x0 = col * self.blockDim# + self.xOffset
                     y0 = row * self.blockDim + self.yOffset
                     x1 = x0 + self.blockDim
                     y1 = y0 + self.blockDim
@@ -323,11 +322,16 @@ class MapWindow(pyglet.window.Window):
             self.xOffset += self.navStep
             self.resetKeys()
         if self.up:
-            self.yOffset += -self.navStep
-            self.resetKeys()
-        elif self.down:
             self.yOffset += self.navStep
             self.resetKeys()
+        elif self.down:
+            self.yOffset += -self.navStep
+            self.resetKeys()
+        
+        # Keep offsets between +/- self.windowDim
+        self.xOffset %= self.windowDim
+        self.yOffest %= self.windowDim
+
         print("xOffset: " + str(self.xOffset))
         print("yOffset: " + str(self.yOffset))
 
