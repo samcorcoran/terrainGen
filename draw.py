@@ -66,35 +66,7 @@ class MapWindow(pyglet.window.Window):
         # Draw terrain tiles
         pyglet.gl.glColor4f(1.0,0,0,1.0)
         #print("Total terrain tiles:" + str(len(self.tiles)))
-        self.drawTiles()
-
-    def drawTiles(self):
-        for tile in self.tiles:
-            #tile.printTile()
-            self.drawTile(tile)
-
-    # Draws a tile based on data in object
-    def drawTile(self, tile):
-        # Apply shifts
-        xShift = self.xOffset
-        yShift = self.yOffset
-
-        x0 = tile.xLoc + xShift
-        y0 = tile.yLoc + yShift
-
-        # Adjust locations if offsets resulted in out-of-bounds
-        # Shift x coordinates
-        if x0 < 0:
-            x0 += self.windowDim
-        elif x0 + tile.length > self.windowDim:
-            x0 -= self.windowDim
-        # Shift y coordinates
-        if y0 < 0:
-            y0 += self.windowDim
-        elif y0 + tile.length > self.windowDim:
-            y0 -= self.windowDim
-
-        self.drawSquare(x0, y0, tile.length, tile.color)
+        self.drawBatchTiles()
 
     # Draw a single rectangle behind terrain colored as sea
     def drawFlatSea(self):
@@ -114,6 +86,72 @@ class MapWindow(pyglet.window.Window):
                 x0+height, y0+height,
                 x0, y0+height))
         )
+
+    def drawBatchTiles(self):
+
+        batch = pyglet.graphics.Batch()
+        tileIndices = []
+        tileVertices = []
+        tileColors = []
+        index = 0
+        totalTriangles = 0
+        for tile in self.tiles:
+            index, totalTriangles = self.constructTileDrawArrays(tile, tileIndices, tileVertices, tileColors, index, totalTriangles)
+
+        # Diagnostic prints:
+        #print("tileIndices, tileVertices, tileColors, index, totalTriangles:")
+        #print(tileIndices)
+        #print(tileVertices)
+        #print(tileColors)
+        #print(index)
+        #print(totalTriangles)
+
+        # Compile verticies, indices and colors into a single batch
+        # No mode therefore 'None'        
+        vertex_list = batch.add_indexed(4*int(totalTriangles/2), 
+            pyglet.gl.GL_TRIANGLES,
+            None,
+            tileIndices,
+            ('v2i', tileVertices),
+            ('c3f', tileColors)
+        )
+        # Draw full complement of tiles
+        batch.draw()
+
+    # Calculate vertices, indices and colors for tile's draw call
+    def constructTileDrawArrays(self, tile, tileIndices, tileVertices, tileColors, index, totalTriangles):
+        x0 = tile.xLoc + self.xOffset
+        y0 = tile.yLoc + self.yOffset
+        # Adjust locations if offsets resulted in out-of-bounds
+        # Shift x coordinates
+        if x0 < 0:
+            x0 += self.windowDim
+        elif x0 + tile.length > self.windowDim:
+            x0 -= self.windowDim
+        # Shift y coordinates
+        if y0 < 0:
+            y0 += self.windowDim
+        elif y0 + tile.length > self.windowDim:
+            y0 -= self.windowDim
+
+        # Indices ordered as: 0 1 2 0 3 4
+        tileIndices.extend([index, index+1,
+            index+2, index, 
+            index+2, index+3]
+        )
+        # Calculate vertices for double triangle
+        tileVertices.extend([x0, y0,
+            x0+tile.length, y0,
+            x0+tile.length, y0+tile.length,
+            x0, y0+tile.length]
+        )
+        # Set vert colors
+        tileColors.extend(tile.color * 4)
+        # Increment the index to account for the four added vertices
+        index += 4
+        # Count triangles
+        totalTriangles += 2
+        return index, totalTriangles
 
     # Redraw canvas
     def updateCanvas(self):
