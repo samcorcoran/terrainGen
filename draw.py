@@ -23,6 +23,7 @@ class MapWindow(pyglet.window.Window):
         self.left = False
         self.up = False
         self.down = False
+        self.shiftKey = False
         # Flag for whether map needs updating
         self.mapChanged = True
         # Track offset sizes
@@ -201,39 +202,31 @@ class MapWindow(pyglet.window.Window):
         return stepsTaken
     
     def applyKeyPressOffsets(self):
+        # Holding shift key applies multiplier for larger steps
+        multiplier = 1
+        if self.shiftKey == True:
+            multiplier = self.navStepMultiplier
+
         # Apply keypress offsets
         if self.left:
-            self.xOffset += -self.navStep * self.blockDim
+            self.xOffset += -self.navStep * self.blockDim * multiplier
             self.resetKeys()
         elif self.right:
-            self.xOffset += self.navStep * self.blockDim
-            print("Right offsetting by " + str(self.navStep) + " * " + str(self.blockDim))
+            self.xOffset += self.navStep * self.blockDim * multiplier
             self.resetKeys()
         if self.up:
-            self.yOffset += self.navStep * self.blockDim
+            self.yOffset += self.navStep * self.blockDim * multiplier
             self.resetKeys()
         elif self.down:
-            self.yOffset += -self.navStep * self.blockDim
+            self.yOffset += -self.navStep * self.blockDim * multiplier
             self.resetKeys()
         
         # Keep offsets between +/- self.windowDim
         self.xOffset %= self.windowDim
         self.yOffset %= self.windowDim
 
-        print("xOffset: " + str(self.xOffset))
-        print("yOffset: " + str(self.yOffset))
-
-    def keyPressed(self, event):
-        if event.keysym == 'Left':
-            self.left = True
-        elif event.keysym == 'Right':
-            self.right = True
-        elif event.keysym == 'Up':
-            self.up = True
-        elif event.keysym == 'Down':
-            self.down = True
-        self.mapChanged = True
-        
+        #print("xOffset: " + str(self.xOffset))
+        #print("yOffset: " + str(self.yOffset))
 
     def resetKeys(self):
         self.up = False
@@ -244,19 +237,30 @@ class MapWindow(pyglet.window.Window):
     #@window.event
     def on_key_press(self, symbol, modifiers):
         if symbol == key.A:
-            print("The 'A' key was pressed.")
+            #print("The 'A' key was pressed.")
+            pass
         elif symbol == key.LEFT:
-            print("The left arrow key was pressed.")
+            #print("The left arrow key was pressed.")
             self.left = True
         elif symbol == key.RIGHT:
-            print("The right arrow key was pressed.")
+            #print("The right arrow key was pressed.")
             self.right = True
         elif symbol == key.UP:
-            print("The up arrow key was pressed.")
+            #print("The up arrow key was pressed.")
             self.up = True
         elif symbol == key.DOWN:
-            print("The down arrow key was pressed.")
+            #print("The down arrow key was pressed.")
             self.down = True
         elif symbol == key.ENTER:
-            print("The enter key was pressed.")
+            #print("The enter key was pressed.")
+            pass
+        elif symbol == key.LSHIFT:
+            #print("The shift key was pressed.")
+            self.shiftKey = True
+            pass
         self.applyKeyPressOffsets()
+
+    def on_key_release(self, symbol, modifiers):
+        if symbol == key.LSHIFT:
+            #print("The shift key was released.")
+            self.shiftKey = False
