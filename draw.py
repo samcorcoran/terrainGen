@@ -32,29 +32,14 @@ class MapWindow(pyglet.window.Window):
         self.totalYOffset = 0
         # Navigation step size: 10% of grid width, minimum of 1
         self.navStep = max(1, int(0.1 * len(self.terrain.grid)))
-        print("init navStep: " + str(self.navStep))
+        self.navStepMultiplier = 3
+        print("init navStep: " + str(self.navStep) + " (multiplier: " + str(self.navStepMultiplier) + ")")
 
         # Render all sea as a single tile underneath land tiles
         self.flatSea = flatSea
+        self.flatSeaHeight = 0.65
         self.flatSeaColor = (0, 0, 0.25)
         #pyglet.gl.glClearColor(self.flatSeaColor[0], self.flatSeaColor[1], self.flatSeaColor[2], 1)
-
-        # Color bands (terrain height cut offs, e.g. 0.65 seaLevel means that heights below 0.65 are sea)
-        # Palette: Island Contouring
-        self.seaLevel = 0.65
-        self.sandLevel = 0.68
-        self.grassLevel = 0.85
-        self.hillLevel = 0.92
-        self.mountainLevel = 0.98
-        self.minHeightForShadows = self.seaLevel
-
-        # Palette: In-land hills and mountains colouring
-        #self.minHeightForShadows = 0.15
-        #seaLevel = 0.15 * 255
-        #sandLevel = 0.2 * 255
-        #grassLevel = 0.55 * 255
-        #hillLevel = 0.75 * 255
-        #mountainLevel = 0.9 * 255
 
         # Shadowing
         self.useShadows = False
@@ -67,7 +52,7 @@ class MapWindow(pyglet.window.Window):
         # Calculate grid of colors
         self.useColors = True
         self.interpColorAcrossBands = True
-        self.colorGrid2d = self.getColorGrid2D()
+        #self.colorGrid2d = self.getColorGrid2D()
 
         # Track bottom-left coordinates of tiles
         self.tiles = []
@@ -79,7 +64,7 @@ class MapWindow(pyglet.window.Window):
         self.drawFlatSea()
         # Draw terrain tiles
         pyglet.gl.glColor4f(1.0,0,0,1.0)
-        print("Total terrain tiles:" + str(len(self.tiles)))
+        #print("Total terrain tiles:" + str(len(self.tiles)))
         self.drawTiles()
 
     def drawTiles(self):
@@ -100,21 +85,21 @@ class MapWindow(pyglet.window.Window):
         # Shift x coordinates
         if x0 < 0:
             x0 += self.windowDim
-        elif x0 + tile.height > self.windowDim:
+        elif x0 + tile.length > self.windowDim:
             x0 -= self.windowDim
         # Shift y coordinates
         if y0 < 0:
             y0 += self.windowDim
-        elif y0 + tile.height > self.windowDim:
+        elif y0 + tile.length > self.windowDim:
             y0 -= self.windowDim
 
-        self.drawSquare(x0, y0, tile.height, tile.color)
+        self.drawSquare(x0, y0, tile.length, tile.color)
 
     # Draw a single rectangle behind terrain colored as sea
     def drawFlatSea(self):
         # Draw flat sea
         if self.flatSea:
-            print("Flat sea top coord: " + str(self.terrain.xDim * self.blockDim))
+            #print("Flat sea top coord: " + str(self.terrain.xDim * self.blockDim))
             self.drawSquare(0, 0, self.terrain.xDim * self.blockDim, self.flatSeaColor)
 
     def drawSquare(self, x0, y0, height, color):
@@ -143,16 +128,17 @@ class MapWindow(pyglet.window.Window):
         for row in range(gridDim):
             for col in range(gridDim):
                 # If terrain is above sea level, create tile
-                if not self.flatSea or self.terrain.grid[row][col] > 0.65:
+                if not self.flatSea or self.terrain.grid[row][col] > self.flatSeaHeight:
                     # Get tile coords
-                    x0 = col * self.blockDim# + self.xOffset
-                    y0 = row * self.blockDim# + self.yOffset
+                    x0 = col * self.blockDim
+                    y0 = row * self.blockDim
                     x1 = x0 + self.blockDim
                     y1 = y0 + self.blockDim
 
-                    color = self.colorGrid2d[row][col]
+                    #color = self.colorGrid2d[row][col]
 
-                    newTile = tile.Tile(x0, y0, self.blockDim, tuple(color))
+                    newTile = tile.Tile(x0, y0, self.blockDim, self.terrain.grid[row][col])
+                    newTile.calculateTerrainColor(self.useColors, self.interpColorAcrossBands)
                     self.tiles.append(newTile)
 
         print("Total tiles: " + str(len(self.tiles)))
@@ -177,83 +163,7 @@ class MapWindow(pyglet.window.Window):
                 colorGrid2d[x][y] = color
         return colorGrid2d
 
-
-    def getTerrainColor(self, height, x, y):
-        # Height proportions at which different terrain colors end
-        height *= 255
-
-        seaLevelCol = self.seaLevel * 255
-        sandLevelCol = self.sandLevel * 255
-        grassLevelCol = self.grassLevel * 255
-        hillLevelCol = self.hillLevel * 255
-        mountainLevelCol = self.mountainLevel * 255
-
-        if height < seaLevelCol:
-            seaMin = 50
-            seaMax = 140
-            t = 0.5
-            if self.interpColorAcrossBands:
-                t = height/seaLevelCol
-            c = seaMin + t*(seaMax-seaMin)
-            chosenColor = [0, 0, c]
-        elif height < sandLevelCol:
-            sandMin = 75
-            sandMax = 125
-            # Interpolation is reversed so low-sand is light green and high-grass is dark green
-            t = 0.5
-            if self.interpColorAcrossBands:
-                t = 1-((height-seaLevelCol)/(sandLevelCol-seaLevelCol))
-            c = sandMin + t*(sandMax-sandMin)
-            chosenColor = [c, c, 0]
-            #chosenColor = [255, 0, 0]
-        elif height < grassLevelCol:
-            grassMin = 30
-            grassMax = 80
-            t = 0.5
-            if self.interpColorAcrossBands:
-                # Interpolation is reversed so low-grass is light green and high-grass is dark green
-                t = 1-((height-sandLevelCol)/(grassLevelCol-sandLevelCol))
-            c = grassMin + t*(grassMax-grassMin)
-            chosenColor = [0, c, 0]
-        elif height < hillLevelCol:
-            hillMin = 30
-            hillMax = 55
-            t = 0.5
-            if self.interpColorAcrossBands:
-                t = ((height-grassLevelCol)/(hillLevelCol-grassLevelCol))
-            c = hillMin + t*(hillMax-hillMin)                        
-            chosenColor = [c, c, 0]
-        elif height < mountainLevelCol:
-            mountainMin = 60
-            mountainMax = 170
-            t = 0.5
-            if self.interpColorAcrossBands:
-                t = ((height-hillLevelCol)/(mountainLevelCol-hillLevelCol))
-            c = mountainMin + t*(mountainMax-mountainMin)                        
-            chosenColor = [c, c, c]
-        else:
-            snowMin = 200
-            snowMax = 255
-            t = 0.5
-            if self.interpColorAcrossBands:
-                t = ((height-mountainLevelCol)/(1-mountainLevelCol))
-            c = snowMin + t*(snowMax-snowMin)
-            chosenColor = [c, c, c]
-
-        # Ensure integer values for colors
-        chosenColor = [int(chosenColor[0])/255, int(chosenColor[1])/255, int(chosenColor[2])/255]
-        #print("chosen color: " + str(chosenColor))
-
-        # Apply shadowing
-        if self.useShadows:
-            shadowing = min((1 - self.getLocShadowing(x, y)) * (1-self.shadowStrength), 1)
-            chosenColor[0] = int(chosenColor[0] * shadowing)
-            chosenColor[1] = int(chosenColor[1] * shadowing)
-            chosenColor[2] = int(chosenColor[2] * shadowing)
-        
-        return chosenColor
-
-        # Larger shadowing numbers indicate deeper shadows
+    # Larger shadowing numbers indicate deeper shadows
     def getLocShadowing(self, x, y):
         # Check location is on-grid
         shadowed = False
